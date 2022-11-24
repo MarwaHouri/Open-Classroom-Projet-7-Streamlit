@@ -9,7 +9,8 @@ import pickle
 import shap
 import matplotlib as mpl
 from PIL import Image
-
+from lime import lime_tabular
+   
 model = pickle.load(open('test_RFC_model_all.pkl','rb'))
 thresh=pickle.load(open('best_th.pkl', 'rb'))
 explainer, shap_values =pickle.load(open('explainer_shap_values.pkl','rb'))
@@ -23,8 +24,14 @@ summary=Image.open('summary_plot.png')
 summary_mean=Image.open('summary_plot_mean.png')
 df=X_test.join(y_test)
 top10_feat=imp.head(10).Features.values
+def lime_explain():
+    explainer_lime = lime_tabular.LimeTabularExplainer(X_test.values, mode="classification", class_names=[0,1],feature_names= X_train.columns)
+    return(explainer_lime)
+
+explainer_lime=lime_explain()
 
 st.title('Prêt à dépenser : Calculateur de droit au crédit')
+
 
 def graph_imp():
     test=imp.head(25)
@@ -37,6 +44,7 @@ def graph_imp():
                  size=20,
                  y=1.1)
     return(fig)
+
 def tachymetre(client_probability, best_th):
     fig, ax = plt.subplots(figsize=(5, 1))
     fig.suptitle("probability of credit default (%)",
@@ -74,6 +82,8 @@ def minmax_plt(client_id, feature):
     )
     ax.add_patch(FancyArrowPatch((client[feature], 1), (client[feature], 0), mutation_scale=20))
     return fig
+
+
 def boxplot(client_id):
     fig, axes = plt.subplots(4,3, figsize=(8,20)) # create figure and axes
     client=df.loc[client_id]
@@ -87,6 +97,7 @@ def boxplot(client_id):
     fig.delaxes(axes[3][2])
     fig.delaxes(axes[3][1])
     return(fig)
+
 
 def kde(client_id, feature):
     d=df.loc[client_id][feature]
@@ -119,21 +130,23 @@ def kde(client_id, feature):
     plt.xlim(xmin, xmax)
     return(fig)
 
-def st_shap(plot, height=None):
-    shap_html = f"<head>{shap.getjs()}</head><body>{plot.html()}</body>"
-    components.html(shap_html, height=height)
+#def st_shap(plot, height=None):
+ #   shap_html = f"<head>{shap.getjs()}</head><body>{plot.html()}</body>"
+  #  components.html(shap_html, height=height)
 
 with st.sidebar:
+    st.subheader('Menu')
     topic = st.radio(
     'Select a topic',
-    ('General', 'Decision', 'Client information'))
+    ('General', 'Decision', 'Interpretabilite', 'Analyse comparative'))
+    
+    st.subheader('Client ID')
+    option=st.selectbox('Select client id: ', X_test.index)
 
 if topic=='General':
     st.write('This page is dedicated for the general information to help you understand our decision regarding the acceptance or denial of you credit demand')
     fig=graph_imp()
     st.pyplot(fig)
-    
-    
     
     st.subheader('Shap summary plots')
     col1, col2=st.columns(2)
@@ -143,15 +156,9 @@ if topic=='General':
         st.image(summary_mean)
     
 if topic=='Decision':    
-    col1, col2=st.columns(2)
-    with col1:
-        st.subheader('Client ID')
-        option=st.selectbox('Select client id: ', X_test.index)
-    with col2:
-
-        st.subheader('Informations client')
-        top_imp=X_test[X_test.index==option][top10_feat]
-        st.dataframe(top_imp.transpose())
+    st.subheader('Informations client')
+    top_imp=X_test[X_test.index==option][top10_feat]
+    st.dataframe(top_imp.transpose())
     
     st.subheader('Prediction droit au credit')
     client_prob=model.predict_proba(X_test[X_test.index==option])
@@ -174,12 +181,12 @@ if topic=='Decision':
             fig=minmax_plt(option, feat)
             st.pyplot(fig)
 
-if topic=='Client information':
+if topic=='Interpretabilite':
     st.subheader('General shap values')
     st.image(shap_general,caption='Shap force plot for the test set') 
     
     st.subheader('Shap values for a given client')
-    X=X_test.loc[1]
+    X=X_test.loc[option]
     X_display=X_test.columns
     clf=model.steps[2][1]
     explainer = shap.TreeExplainer(clf)
@@ -188,10 +195,21 @@ if topic=='Client information':
     fig, ax = plt.subplots(figsize=(10, 4))
     st.pyplot(shap.force_plot(explainer.expected_value[1], shap_values[1], X_display, matplotlib=True))
     
+    st.subheader('Lime')
+    explanation = explainer_lime.explain_instance(X_test.values[option], model.predict_proba,
+                                         num_features=15)
+
+#explanation.show_in_notebook()
+    html_save=explanation.as_html()
+    st.components.v1.html(html_save, width=900, height=350, scrolling=True)
+    st.pyplot(explanation.as_pyplot_figure())
+
+    
+if topic=='Analyse comparative':    
     col1, col2=st.columns(2)
     with col1:
         st.subheader('Positionnement par rapport au autres clients')
-        fig=boxplot(3)
+        fig=boxplot(option)
         st.pyplot(fig)
     
 #features= df.columns.values
@@ -199,7 +217,7 @@ if topic=='Client information':
         st.subheader('Probability density by feature and decision type')
         sel_features = st.multiselect("Choose features to visualize", top10_feat, top10_feat[:2])
         for feat in sel_features:
-            fig=kde(3, feat)
+            fig=kde(option, feat)
             st.pyplot(fig)
     
 
