@@ -141,8 +141,11 @@ with st.sidebar:
     ('General', 'Decision', 'Interpretabilite', 'Analyse comparative'))
     
     st.subheader('Client ID')
-    option=st.selectbox('Select client id: ', X_test.index)
-
+    urlToCall = "http://127.0.0.1:5000/clients"
+    response = requests.get(urlToCall)
+    data_dic = response.json()
+    option=st.selectbox('Select client id: ', data_dic['ids'])
+    
 if topic=='General':
     st.write('This page is dedicated for the general information to help you understand our decision regarding the acceptance or denial of you credit demand')
     fig=graph_imp()
@@ -160,16 +163,22 @@ if topic=='Decision':
     top_imp=X_test[X_test.index==option][top10_feat]
     st.dataframe(top_imp.transpose())
     
-    st.subheader('Prediction droit au credit')
-    client_prob=model.predict_proba(X_test[X_test.index==option])
-    y_pred=(client_prob[:,1]>thresh).astype('int')
-    if y_pred[0]==1:
-        decision='Refuse'
+     st.subheader('Prediction droit au credit')
+    #client_prob=model.predict_proba(X_test[X_test.index==option])
+    #y_pred=(client_prob[:,1]>thresh).astype('int')
+    baseURL = "http://127.0.0.1:5000/clients"
+    urlToCall = baseURL + '/' + str(option)
+    dic=requests.get(urlToCall)
+    data_dic=dic.json()
+    pred=data_dic['prediction']
+    if pred==0:
+        st.write('Le credit est accepte')
     else:
-        decision='Accepter'
-    st.write('La decision est: ',' ',  decision)
-    
-    fig=tachymetre(client_prob.flat[1], thresh)
+        st.write('Le credit est refuse')
+        
+    proba_client=data_dic['proba'][1]
+    thresh=data_dic['thresh']
+    fig=tachymetre(proba_client,thresh)
     st.pyplot(fig)
     
     st.subheader('Position du client par rapport aux extremes')
@@ -202,7 +211,7 @@ if topic=='Interpretabilite':
 #explanation.show_in_notebook()
     html_save=explanation.as_html()
     st.components.v1.html(html_save, width=900, height=350, scrolling=True)
-    st.pyplot(explanation.as_pyplot_figure())
+    #st.pyplot(explanation.as_pyplot_figure())
 
     
 if topic=='Analyse comparative':    
