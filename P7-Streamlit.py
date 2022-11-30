@@ -1,31 +1,27 @@
 import streamlit as st
+import streamlit.components.v1 as components   
+import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-import matplotlib
+import matplotlib as mpl
+#import matplotlib
 from matplotlib.patches import Rectangle, FancyArrowPatch
-import numpy as np
 import pickle
 import shap
-import matplotlib as mpl
 from PIL import Image
-from lime import lime_tabular
 import requests
 import json
-import streamlit.components.v1 as components   
 
-#model = pickle.load(open('test_RFC_model_all.pkl','rb'))
-#explainer, shap_values =pickle.load(open('explainer_shap_values.pkl','rb'))
 minmax=pd.read_csv('minmax.csv')
 shap_general=Image.open('shap.png')
 logo=Image.open('logo.png')
 summary=Image.open('summary_plot.png')
-summary_mean=Image.open('summary_plot_mean.png')
+#summary_mean=Image.open('summary_plot_mean.png')
 imp=pd.read_csv('importances.csv')
 top10_feat=imp.head(10).Features.values
 df0=pd.read_csv('df0.csv')
 df1=pd.read_csv('df1.csv')
-X_test=pd.read_csv('X_test.csv')
 baseURL = "http://127.0.0.1:5000"
 
 
@@ -41,9 +37,9 @@ def graph_imp():
     
     ax=test.plot.bar(x='Features', y='Importances', figsize=(10,5), legend=False, color=sns.color_palette())
     fig=ax.figure
-    fig.suptitle("Best 25 general feature importances",
-                 size=20,
-                 y=1.1)
+    #fig.suptitle("Best 25 general feature importances",
+                # size=20,
+               #  y=1.1)
     return(fig)
 
 def tachymetre(client_probability, best_th):
@@ -152,7 +148,7 @@ with st.sidebar:
     ( 'Decision','General', 'Interpretabilite', 'Analyse comparative'))
     
     st.subheader('Client ID')
-    urlToCall = "http://127.0.0.1:5000/clients"
+    urlToCall = baseURL+'/clients'
     response = requests.get(urlToCall)
     data_dic = response.json()  
     option=st.selectbox('Select client id: ', data_dic['ids'])
@@ -194,17 +190,21 @@ if topic=='Decision':
                     #General#
 ###################################################################################    
 if topic=='General':
-    st.write('This page is dedicated for the general information to help you understand our decision regarding the acceptance or denial of you credit demand')
+    
 ########################Graphe des feautures importances du model#######################
+    st.subheader('Top 25 features important generees par le model')
     fig=graph_imp()
     st.pyplot(fig)
+    
+################# Force plot GENERAL################################################    
+    st.subheader('Shap force plot general')
+    st.image(shap_general,caption='Shap force plot for the test set') 
+    
 ###################### Graphe des feature importances par Shap ########################    
+    
     st.subheader('Shap summary plots')
-    #col1, col2=st.columns(2)
-    #with col1:
     st.image(summary)
-    #with col2:
-     #   st.image(summary_mean)
+    
 
     
 ###########################################################################################
@@ -212,17 +212,13 @@ if topic=='General':
 ###########################################################################################
 
 if topic=='Interpretabilite':
-################# Force plot GENERAL################################################    
-    st.subheader('General shap values')
-    st.image(shap_general,caption='Shap force plot for the test set') 
-    
+
 #################Force plot d'un client selectionne###############################    
-    st.subheader('Shap values for a given client')
+    st.subheader('Shap force plot du client')
     def st_shap(plot, height=None):
         shap_html = f"<head>{shap.getjs()}</head><body>{plot.html()}</body>"
         components.html(shap_html, height=height)
-    baseURL = "http://127.0.0.1:5000/shap"
-    urlToCall = baseURL + '/' + str(option)
+    urlToCall = baseURL + '/shap/' + str(option)
     
     dic=requests.get(urlToCall)
     data_dic=dic.json()
@@ -230,16 +226,7 @@ if topic=='Interpretabilite':
     zipped=data_dic['shap']
     features, shap_values, values=zip(*zipped)
    
-    #test=pd.DataFrame(data_dic['shap'])
-    #test.columns=['Features', 'Shap_values', 'Values'] 
-    #data=pd.DataFrame(data_dic['data'].items())
-   
-    #shap_values=pd.DataFrame(shap_values)
-   
-    #st.write(test)
-    #st.write(pd.DataFrame(data.items()))
-
-    shap.initjs()    
+    #shap.initjs()    
     plot=shap.force_plot(expected, np.array(shap_values), list(features))
     st_shap(plot, 200)
    
@@ -261,7 +248,7 @@ if topic=='Interpretabilite':
 ###########################################################################################
 
 if topic=='Analyse comparative':    
-    client.columns=['Information client '+ str(option)] 
+    client.columns=['Informations client '+ str(option)] 
     st.subheader('Informations client')
     st.dataframe(client.loc[top10_feat])
     
@@ -277,7 +264,7 @@ if topic=='Analyse comparative':
             st.pyplot(fig)         
             
         with col2 :
-            #st.subheader('Situation du client par rapport a la distribution par feature et classe reelle ')
+            
             fig=kde(client, feat)
             st.pyplot(fig)
     
