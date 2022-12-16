@@ -13,34 +13,36 @@ from PIL import Image
 import requests
 import json
 
-minmax=pd.read_csv('minmax.csv')
-shap_general=Image.open('shap.png')
+from PIL import Image
+from io import BytesIO
+
+
 logo=Image.open('logo.png')
+genre=Image.open('genre.png')
+summary_mean=Image.open('summary_plot_mean.png')
+importance=Image.open('importance.png')
 summary=Image.open('summary_plot.png')
-#summary_mean=Image.open('summary_plot_mean.png')
-imp=pd.read_csv('importances.csv')
-top10_feat=imp.head(10).Features.values
-df0=pd.read_csv('df0.csv')
-df1=pd.read_csv('df1.csv')
+top10_feat=pickle.load(open('top10_feat.pkl', 'rb'))
+#df0=pd.read_csv('df0.csv')
+#df1=pd.read_csv('df1.csv')
 baseURL = "http://127.0.0.1:5000"
-
-
+top9_feat=np.delete(top10_feat,-1)
 
 ##########################Les fonctions utilisees#######################################
 #######################################################################################
-def graph_imp():
-    ''' Representation des features importances 
-        globales definies par le model de classification '''
-    test=imp.head(25)
-    feat=test.Features.values
-    fig, ax = plt.subplots()
-    
-    ax=test.plot.bar(x='Features', y='Importances', figsize=(10,5), legend=False, color=sns.color_palette())
-    fig=ax.figure
+#def graph_imp():
+ #   ''' Representation des features importances 
+  #      globales definies par le model de classification '''
+  #  test=imp.head(25)
+   # feat=test.Features.values
+   # fig, ax = plt.subplots()
+ #   
+ #   ax=test.plot.bar(x='Features', y='Importances', figsize=(10,5), legend=False, color=sns.color_palette())
+#    fig=ax.figure
     #fig.suptitle("Best 25 general feature importances",
                 # size=20,
                #  y=1.1)
-    return(fig)
+ #   return(fig)
 
 def tachymetre(client_probability, best_th):
     ''' Representation de la probailite d'acceptation 
@@ -60,7 +62,7 @@ def tachymetre(client_probability, best_th):
     return fig
 
 
-def minmax_plt(df, feature):
+def minmax_plt(df, feature, feat_disc):
     ''' Representation d'un curseur qui permet l'affichage de l'emplacement des info d'un client donne par rapport a l'intervall des valeurs'''
     client_feat=float(df.loc[feature].values)
     fig, ax = plt.subplots(figsize=(5, 1.5))
@@ -69,19 +71,19 @@ def minmax_plt(df, feature):
                  size=10,
                  y=1)
     cmap = (mpl.colors.ListedColormap(['firebrick','darkred','firebrick' ]))
-    bounds = [minmax[feature].values[0],minmax[feature].values[1],minmax[feature].values[3] ,minmax[feature].values[4]]
+    bounds = [feat_disc[0],feat_disc[1],feat_disc[3] ,feat_disc[4]]
     norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
     fig.colorbar(
         mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
         cax=ax,
         #extend='both',
         extendfrac='auto',
-        ticks=[minmax[feature].values[0],minmax[feature].values[1], minmax[feature].values[2],minmax[feature].values[3],minmax[feature].values[4]],
+        ticks=[feat_disc[0],feat_disc[1], feat_disc[2],feat_disc[3],feat_disc[4]],
         spacing='uniform',
         orientation='horizontal',
     )
       
-    ax.axvline(minmax[feature].values[2], ls='-', color='silver')
+    ax.axvline(feat_disc[2], ls='-', color='silver')
     ax.add_patch(FancyArrowPatch((client_feat, 1), (client_feat, 0), mutation_scale=20))
     label=['min','25%', '50%','75%', 'max']
     for i, x in enumerate(ax.get_xticks()):
@@ -89,26 +91,11 @@ def minmax_plt(df, feature):
     return fig
 
 
-#def boxplot(client_id):
-#    fig, axes = plt.subplots(4,3, figsize=(8,20)) # create figure and axes
-#    client=df.loc[client_id]
-#    for i,el in enumerate(list(top10_feat)):
-#        ax=axes.flatten()[i]
-#        a = df.boxplot(el, ax=ax, showfliers=False)
-#        ax.axhline(y=client[el], c='red', ls='--') 
-#    fig.suptitle("Situating the client with respect to other on best 10 feature importances ",
-#                 size=15,
-#                 y=0.9)
-#    fig.delaxes(axes[3][2])
-#    fig.delaxes(axes[3][1])
-#    return(fig)
-
-
-def kde(df, feature):
+def kde(df, feature, feat_disc):
     client_feat=float(df.loc[feature].values)
     bw_method=0.5
-    xmin = minmax[feature].values[0]
-    xmax = minmax[feature].values[4]
+    xmin = feat_disc[0]
+    xmax = feat_disc[4]
     # Plotting
     plt.style.use('seaborn')
     fig = plt.figure(figsize=(5, 5))
@@ -133,50 +120,47 @@ def kde(df, feature):
     plt.xlim(xmin, xmax)
     return(fig)
 
-#def st_shap(plot, height=None):
- #   shap_html = f"<head>{shap.getjs()}</head><body>{plot.html()}</body>"
-  #  components.html(shap_html, height=height)
 
-############################## Menu global a gauche################################
-##################################################################################
+###############################################################################
+############################## Menu global a gauche############################
+#################################################################################
 with st.sidebar:
     st.image(logo)
     
     st.subheader('Menu')
-    topic = st.radio(
-    'Select a topic',
-    ( 'Decision','General', 'Interpretabilite', 'Analyse comparative'))
-    
-    st.subheader('Client ID')
     urlToCall = baseURL+'/clients'
     response = requests.get(urlToCall)
     data_dic = response.json()  
-    option=st.selectbox('Select client id: ', data_dic['ids'])
+    option=st.selectbox('Choisir un client ID: ', data_dic['ids'])
     
+    #st.subheader('Menu')
+    topic = st.radio(
+    'Choisir un theme',
+    ( 'Décision','Informations générales', 'Interpretabilité', 'Analyse comparative', 'Analyse par genre'))
+    
+        
     urlToCall = baseURL + '/clients-info/' + str(option)
     client=requests.get(urlToCall)
     client=pd.read_json(client.text)
 
 
-st.title('Prêt à dépenser : Calculateur de droit au crédit')
-#st.subheader('Prediction droit au credit')
-    #client_prob=model.predict_proba(X_test[X_test.index==option])
-    #y_pred=(client_prob[:,1]>thresh).astype('int')
-    #baseURL = "http://127.0.0.1:5000"
+
+
 ######################################################################################
                     # Decision#
 ######################################################################################
 
-if topic=='Decision':
-    st.subheader('Decision sur l\'eligibilite du client a un credit') 
+if topic=='Décision':
+    st.title('Prêt à dépenser : Calculateur de droit au crédit')
+    st.subheader('Décision sur l\'eligibilité du client à un crédit') 
     urlToCall = baseURL + '/clients/' + str(option)
     dic=requests.get(urlToCall)
     data_dic=dic.json()
     pred=data_dic['prediction']
     if pred==0:
-        st.write('Le credit est accepte')
+        st.write('La demande de crédit est acceptée')
     else:
-        st.write('Le credit est refuse')
+        st.write('La demande de crédit est refusée')
         
 ######################Representation graphique tachymetre#################################
     
@@ -189,30 +173,36 @@ if topic=='Decision':
 ###################################################################################
                     #General#
 ###################################################################################    
-if topic=='General':
-    
+if topic=='Informations générales':
+    st.title('Informations générales sur le modele')
 ########################Graphe des feautures importances du model#######################
-    st.subheader('Top 25 features important generees par le model')
-    fig=graph_imp()
-    st.pyplot(fig)
+    st.subheader('Top 15 features importances générées par le modele')
+    #fig=graph_imp()
+    st.image(importance, width=700)
     
 ################# Force plot GENERAL################################################    
-    st.subheader('Shap force plot general')
-    st.image(shap_general,caption='Shap force plot for the test set') 
+   # st.subheader('Shap force plot general')
+   # st.image(shap_general,caption='Shap force plot for the test set') 
     
 ###################### Graphe des feature importances par Shap ########################    
     
-    st.subheader('Shap summary plots')
+    st.subheader('Shap summary plot : impact des indicateurs sur la prédiction de rejet par instance:')
+    st.write ()
     st.image(summary)
+    st.subheader('Impact moyen des indicateurs sur la décision')
+    st.image(summary_mean)
     
-
+    
+    
+    
+    
     
 ###########################################################################################
                 #INTERPRETABILITE SHAP#
 ###########################################################################################
 
-if topic=='Interpretabilite':
-
+if topic=='Interpretabilité':
+    st.title('Interprétation locale de la décision')
 #################Force plot d'un client selectionne###############################    
     st.subheader('Shap force plot du client')
     def st_shap(plot, height=None):
@@ -248,26 +238,71 @@ if topic=='Interpretabilite':
 ###########################################################################################
 
 if topic=='Analyse comparative':    
-    client.columns=['Informations client '+ str(option)] 
-    st.subheader('Informations client')
-    st.dataframe(client.loc[top10_feat])
-    
+    st.title('Analyse comparative du client par rapport aux autres clients')
+       
     st.subheader('Positionnement du client par rapport aux autres clients')
-    sel_features = st.multiselect("Choisir les features a visualiser", top10_feat, top10_feat[:2])             
-    for feat in sel_features:
+    sel_features = st.multiselect("Choisir les indicateurs :", top9_feat, top9_feat[:2])             
+    for i, feat in enumerate(sel_features):
+        urlToCall = baseURL + '/feature-info/' + feat
+        response = requests.get(urlToCall)
+        data_dic = response.json()
+        feat_disc=data_dic['feat']
+        min_clients=data_dic['min_clients']
+        max_clients=data_dic['max_clients']
+        list_min=pd.DataFrame(min_clients, columns=['Client ID'])
+        list_max=pd.DataFrame(max_clients, columns=['Client ID'])
         
+        col1, col2, col3=st.columns([1, 3, 1])
+        urlToCall1 = baseURL + '/kde/' +str(option)  +'/'+ feat    
+        response=requests.get(urlToCall1)
+        img = Image.open(BytesIO(response.content))
+        col2.image(img, width=500)
+           
+        #fig=kde(client, feat, feat_disc)
+        #st.pyplot(fig)
         st.write('Position du client', str(option),' par rapport a', feat)
+        fig=minmax_plt(client, feat, feat_disc)
+        st.pyplot(fig)
+            
         col1, col2 = st.columns(2)
-        with col1 :
+        with col1 :   
+        
+            show_min = st.checkbox('Montrer la liste des clients ayant une valeur minimale', key=feat)
+            if show_min:
+                st.dataframe(list_min)
             
-            fig=minmax_plt(client, feat)
-            st.pyplot(fig)         
-            
-        with col2 :
-            
-            fig=kde(client, feat)
-            st.pyplot(fig)
+        with col2:
+            show_max = st.checkbox('Montrer la liste des clients ayant une valeur maximale', key=i)
+            if show_max:
+                st.dataframe(list_max)
+        
+       
+        
+        
+###############################################################################
+####            Analyse par genre
+###############################################################################
+if topic == 'Analyse par genre':
+    st.title('Exploration des indicateurs en fonction du genre du client')
+    col1, col2=st.columns(2)
+    with col1:
+        client.columns=['Informations client '+ str(option)] 
+        st.subheader('Informations client')
+        st.dataframe(client.loc[top10_feat])
     
+        
+    #fig=gender_dist_plot(client)
+    #st.pyplot(fig)
+    
+    with col2:
+        st.subheader('Distribution des clients par genre')
+        st.image(genre, width=500)
+
+    st.subheader('Situation du client par rapport aux indicateurs principals en fonction du genre')
+    urlToCall = baseURL + '/gender/' + str(option)    
+    response=requests.get(urlToCall)
+    img = Image.open(BytesIO(response.content))
+    st.image(img, width=800)
 
 
 
