@@ -252,13 +252,13 @@ if topic=='Analyse comparative':
         list_min=pd.DataFrame(min_clients, columns=['Client ID'])
         list_max=pd.DataFrame(max_clients, columns=['Client ID'])
         
+        st.write('Distribution de ' + feat + 'par rapport a la vrai classe des clients')
         col1, col2, col3=st.columns([1, 3, 1])
         urlToCall1 = baseURL + '/kde/' +str(option)  +'/'+ feat    
         response=requests.get(urlToCall1)
         img = Image.open(BytesIO(response.content))
         with col2:
-         st.write('Distribution de ' + feat + 'par rapport a la vrai classe des clients')
-         st.image(img, width=500)
+          st.image(img, width=500)
            
         #fig=kde(client, feat, feat_disc)
         #st.pyplot(fig)
