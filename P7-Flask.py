@@ -95,9 +95,9 @@ def kde(id, feature):
                    ind=None)
     ax=g.axes
     ax.axvline(client_feat, ls='--', color='r')
-    fig.suptitle(
-        f'Distribution de {feature} par rapport a la vrai classe des clients',
-        y=0.95, fontsize=9)
+    #fig.suptitle(
+     #   f'Distribution de {feature} par rapport a la vrai classe des clients',
+      #  y=0.95, fontsize=9)
     plt.legend()
     plt.xlabel(feature)
     plt.ylabel('Probability density')
