@@ -91,34 +91,7 @@ def minmax_plt(df, feature, feat_disc):
     return fig
 
 
-def kde(df, feature, feat_disc):
-    client_feat=float(df.loc[feature].values)
-    bw_method=0.5
-    xmin = feat_disc[0]
-    xmax = feat_disc[4]
-    # Plotting
-    plt.style.use('seaborn')
-    fig = plt.figure(figsize=(5, 5))
-    g=df0[feature].plot(kind='kde',
-                   c='g',
-                   label='Non-defaulting clients',
-                   bw_method=bw_method,
-                   ind=None)
-    df1[feature].plot(kind='kde',
-                   c='r',
-                   label='Defaulting clients',
-                   bw_method=bw_method,
-                   ind=None)
-    ax=g.axes
-    ax.axvline(client_feat, ls='--', color='r')
-    fig.suptitle(
-        f'Distribution de {feature} par rapport a la vrai classe des clients',
-        y=0.95)
-    plt.legend()
-    plt.xlabel(feature)
-    plt.ylabel('Probability density')
-    plt.xlim(xmin, xmax)
-    return(fig)
+
 
 
 ###############################################################################
@@ -252,7 +225,7 @@ if topic=='Analyse comparative':
         list_min=pd.DataFrame(min_clients, columns=['Client ID'])
         list_max=pd.DataFrame(max_clients, columns=['Client ID'])
         
-        st.write('Distribution de ' + feat + 'par rapport a la vrai classe des clients')
+        st.write('Distribution de ' + feat + ' par rapport a la vrai classe des clients')
         col1, col2, col3=st.columns([1, 3, 1])
         urlToCall1 = baseURL + '/kde/' +str(option)  +'/'+ feat    
         response=requests.get(urlToCall1)
