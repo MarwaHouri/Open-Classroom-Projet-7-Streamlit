@@ -256,6 +256,7 @@ if topic=='Analyse comparative':
         urlToCall1 = baseURL + '/kde/' +str(option)  +'/'+ feat    
         response=requests.get(urlToCall1)
         img = Image.open(BytesIO(response.content))
+        st.write('Distribution de ' + feat + 'par rapport a la vrai classe des clients')
         col2.image(img, width=500)
            
         #fig=kde(client, feat, feat_disc)
