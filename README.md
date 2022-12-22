@@ -9,7 +9,7 @@
 
 ## Commandes pour exécution 
 * Prerequis : Python3 
-*Pour installer les librairies de dépendance :
+* Pour installer les librairies de dépendance :
 ```
 pip install -r requirements.txt
 ```
