@@ -3,7 +3,7 @@
 * **P7_Streamlit.py** : Code python pour l'implémentation du Dashboard sur Streamlit
 * **P7_Flask.py** : Code python pour la définition des routes sur Flask RestFull API
 * **requirements.txt** : Fichier txt contenant les librairies de dépendance nécessaires pour le projet
-* Les données du projet sont disponibles sur le lien suivant [Données à télécharger] (https://drive.google.com/drive/folders/1U0eYVsH42GrRNJj9gXfxxaqz4oOaSk32?usp=sharing).
+* Les données du projet sont disponibles sur le lien suivant [Données à télécharger] (https://drive.google.com/drive/folders/1U0eYVsH42GrRNJj9gXfxxaqz4oOaSk32?usp=sharing). Les données sont a copier dans a la racine du dossier 
 
 
 
