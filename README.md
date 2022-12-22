@@ -8,7 +8,8 @@
 
 
 ## Commandes pour exécution 
-* Vérifier que vous avez Python3 sur votre machine et exécuter la commande suivante pour installer les librairies de dépendance :
+* Prerequis : Python3 
+*Pour installer les librairies de dépendance :
 ```
 pip install -r requirements.txt
 ```
