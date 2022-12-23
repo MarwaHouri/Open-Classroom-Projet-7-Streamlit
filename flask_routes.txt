@@ -1,0 +1,28 @@
+
+The endpoints and their documentation are available on the main page of the API
+   	Endpoints:						Desciption
+	----------						----------
+1- '/' 					routes() : Main page - Prints endpoints and their documentation
+
+2- '/clients'	 			getClientList() : Returns the list of client ids
+
+3- '/clients/<int:id>'			getClientPred(id): Returns for a given client :
+							the prediction using personalised threshhold, 
+							the threshhold and 
+							the prediction probabilities
+
+4- '/clients-info/<int:id>' 		getClientInfo(id): Returns the information of a given client from the complete dataset
+
+5- '/feature-info/<feature>' 		getFeatureInfo(feature) : Returns 
+            					the distribution of the feature (min, 25%, median, 75%, max)
+            					the list of client ids having the minimum value for the feature
+            					the list of client ids having the maximum value for the feature
+
+6- '/shap/<int:id>' 			getShapValues(id) : Returns shap informations of a given client
+							the features, values and shap values of the client of the positive class (default credit)
+      						the shap expected value  
+
+7- '/kde/<int:id>/<feature>'		kde(id, feature): Displays the kde graph for the actual classes of clients for a given feature
+ 
+8- '/gender/<int:id>' 			gender_dist_plot(id): Displays boxplots by gender for the best nine indicators along with the position 
+							of the client with respect to the dataset
