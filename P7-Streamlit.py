@@ -17,12 +17,12 @@ from PIL import Image
 from io import BytesIO
 
 
-logo=Image.open('logo.png')
-genre=Image.open('genre.png')
-summary_mean=Image.open('summary_plot_mean.png')
-importance=Image.open('importance.png')
-summary=Image.open('summary_plot.png')
-top10_feat=pickle.load(open('top10_feat.pkl', 'rb'))
+logo=Image.open('Ressources/images/logo.png')
+genre=Image.open('Ressources/images/genre.png')
+summary_mean=Image.open('Ressources/images/summary_plot_mean.png')
+importance=Image.open('Ressources/images/importance.png')
+summary=Image.open('Ressources/images/summary_plot.png')
+top10_feat=pickle.load(open('Ressources/datasets/top10_feat.pkl', 'rb'))
 #df0=pd.read_csv('df0.csv')
 #df1=pd.read_csv('df1.csv')
 baseURL = "http://127.0.0.1:5000"
@@ -91,7 +91,34 @@ def minmax_plt(df, feature, feat_disc):
     return fig
 
 
-
+def kde(df, feature, feat_disc):
+    client_feat=float(df.loc[feature].values)
+    bw_method=0.5
+    xmin = feat_disc[0]
+    xmax = feat_disc[4]
+    # Plotting
+    plt.style.use('seaborn')
+    fig = plt.figure(figsize=(5, 5))
+    g=df0[feature].plot(kind='kde',
+                   c='g',
+                   label='Non-defaulting clients',
+                   bw_method=bw_method,
+                   ind=None)
+    df1[feature].plot(kind='kde',
+                   c='r',
+                   label='Defaulting clients',
+                   bw_method=bw_method,
+                   ind=None)
+    ax=g.axes
+    ax.axvline(client_feat, ls='--', color='r')
+    fig.suptitle(
+        f'Distribution de {feature} par rapport a la vrai classe des clients',
+        y=0.95)
+    plt.legend()
+    plt.xlabel(feature)
+    plt.ylabel('Probability density')
+    plt.xlim(xmin, xmax)
+    return(fig)
 
 
 ###############################################################################
@@ -125,7 +152,7 @@ with st.sidebar:
 
 if topic=='Décision':
     st.title('Prêt à dépenser : Calculateur de droit au crédit')
-    st.subheader('Décision sur l\'eligibilité du client à un crédit') 
+    st.subheader('Décision sur l\'éligibilité du client à un crédit') 
     urlToCall = baseURL + '/clients/' + str(option)
     dic=requests.get(urlToCall)
     data_dic=dic.json()
@@ -147,23 +174,20 @@ if topic=='Décision':
                     #General#
 ###################################################################################    
 if topic=='Informations générales':
-    st.title('Informations générales sur le modele')
+    st.title('Informations générales sur le modèle')
 ########################Graphe des feautures importances du model#######################
-    st.subheader('Top 15 features importances générées par le modele')
+    st.subheader('Top 15 features importances générées par le modèle')
     #fig=graph_imp()
     st.image(importance, width=700)
     
-################# Force plot GENERAL################################################    
-   # st.subheader('Shap force plot general')
-   # st.image(shap_general,caption='Shap force plot for the test set') 
-    
 ###################### Graphe des feature importances par Shap ########################    
+    st.subheader('Impact moyen des indicateurs sur la décision (SHAP)')
+    st.image(summary_mean)
     
     st.subheader('Shap summary plot : impact des indicateurs sur la prédiction de rejet par instance:')
     st.write ()
     st.image(summary)
-    st.subheader('Impact moyen des indicateurs sur la décision')
-    st.image(summary_mean)
+    
     
     
     
@@ -176,6 +200,7 @@ if topic=='Informations générales':
 
 if topic=='Interpretabilité':
     st.title('Interprétation locale de la décision')
+    st.write('L\'interprétation locale donne l\'influence indicateurs sur une prédiction de refus de crédit. ')
 #################Force plot d'un client selectionne###############################    
     st.subheader('Shap force plot du client')
     def st_shap(plot, height=None):
@@ -201,7 +226,7 @@ if topic=='Interpretabilité':
     explanation=(shap.Explanation(values=np.array(shap_values), base_values=expected, 
                               data=np.array(values), feature_names=list(features)))
    
-    st.components.v1.html(shap.waterfall_plot(explanation, max_display = 15), width=10, height=0, scrolling=True)
+    st.components.v1.html(shap.waterfall_plot(explanation, max_display = 15), width=15, height=0, scrolling=True)
     st.set_option('deprecation.showPyplotGlobalUse', False)
 
     st.pyplot(shap.waterfall_plot(explanation, max_display = 15))
@@ -225,13 +250,11 @@ if topic=='Analyse comparative':
         list_min=pd.DataFrame(min_clients, columns=['Client ID'])
         list_max=pd.DataFrame(max_clients, columns=['Client ID'])
         
-        st.write('Distribution de ' + feat + ' par rapport a la vrai classe des clients')
         col1, col2, col3=st.columns([1, 3, 1])
         urlToCall1 = baseURL + '/kde/' +str(option)  +'/'+ feat    
         response=requests.get(urlToCall1)
         img = Image.open(BytesIO(response.content))
-        with col2:
-          st.image(img, width=500)
+        col2.image(img, width=500)
            
         #fig=kde(client, feat, feat_disc)
         #st.pyplot(fig)
