@@ -21,11 +21,11 @@ python getData.py
 ```
 * Pour executer l’API :
 ```
-flask --app P7-Flask run --host=0.0.0.0
+nohup flask --app P7-Flask run --host=0.0.0.0 &
 ```
 * Pour exécuter le Dashborad sur Streamlit :
 ```
-streamlit run P7-Streamlit.py
+nohup streamlit run P7-Streamlit.py &
 ```
 
 
