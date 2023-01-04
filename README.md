@@ -5,7 +5,7 @@
 * **P7_Flask.py** : Code python pour la définition des routes sur Flask RestFull API
 * **requirements.txt** : Fichier txt contenant les librairies de dépendance nécessaires pour le projet
 * **flask_routes.txt** : Fichier txt contenent la documentation des enpoints de l'API (ces informations sont égalements disponibles sur la page d'accueil de l'API)
-* Les données du projet sont disponibles sur le lien suivant https://drive.google.com/drive/folders/1U0eYVsH42GrRNJj9gXfxxaqz4oOaSk32?usp=sharing. (Les données sont a copier dans à la racine du dossier) 
+* Les données du projet sont également disponibles sur le lien suivant https://drive.google.com/file/d/1dOWkgkL0rVAg8PJ8QE9oVkhU2Uy3rtGp/view?usp=share_link
 
 
 
