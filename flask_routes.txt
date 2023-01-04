@@ -17,6 +17,8 @@ The endpoints and their documentation are available on the main page of the API
             					the distribution of the feature (min, 25%, median, 75%, max)
             					the list of client ids having the minimum value for the feature
             					the list of client ids having the maximum value for the feature
+					feature examples: PAYMENT_RATE, EXT_SOURCE_2,EXT_SOURCE_3, DAYS_BIRTH... 
+
 
 6- '/shap/<int:id>' 			getShapValues(id) : Returns shap informations of a given client
 							the features, values and shap values of the client of the positive class (default credit)
