@@ -19,7 +19,7 @@ pip install -r requirements.txt
 ```
 python getData.py
 ```
-* Pour executer l’API :
+* Pour exécuter l’API :
 ```
 nohup flask --app P7-Flask run --host=0.0.0.0 &
 ```
